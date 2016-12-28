@@ -1,0 +1,143 @@
+// Copyright © 2016 Pennock Tech, LLC.
+// All rights reserved, except as granted under license.
+// Licensed per file LICENSE.txt
+
+// We are canonically imported from go.pennock.tech/fingerd but because we are
+// not a library, we do not apply this as an import constraint on the package
+// declarations.  You can fork and build elsewhere more easily this way, while
+// still getting dependencies without a dependency manager in play.
+//
+// This comment is just to let you know that the canonical import path is
+// go.pennock.tech/fingerd and not now, nor ever, using DNS pointing to a
+// code-hosting site not under our direct control.  We keep our options open,
+// for moving where we keep the code publicly available.
+
+package main
+
+import (
+	"flag"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
+
+	"github.com/Sirupsen/logrus"
+)
+
+// I initially set 64 and in my first tests hit this because of an 84K .pubkey
+// Let's be a _little_ more generous; 256KB by default let's one use send up to
+// very slightly more than three-quarters of a MB.
+const defaultFileSizeLimit = 256 * 1024
+
+var opts struct {
+	aliasfile           string
+	listen              string
+	homesDir            string
+	runAsUser           string
+	fileSizeLimit       int64
+	listenTime          time.Duration
+	requestReadTimeout  time.Duration
+	requestWriteTimeout time.Duration
+	minPasswdUid        uint64
+	showVersion         bool
+}
+
+func init() {
+	flag.StringVar(&opts.aliasfile, "alias-file", "/etc/finger.conf", "file to read aliases from (if it exists)")
+	flag.StringVar(&opts.homesDir, "homes-dir", "/home", "where end-user home-dirs live")
+	flag.StringVar(&opts.listen, "listen", ":79", "address-spec to listen for finger requests on")
+	flag.StringVar(&opts.runAsUser, "run-as-user", "", "if starting as root, setuid to this user")
+	flag.DurationVar(&opts.listenTime, "listen.at-a-time", time.Second, "accepting socket listen time (defers program exit)")
+	flag.DurationVar(&opts.requestReadTimeout, "request.timeout.read", 10*time.Second, "timeout for receiving the finger request")
+	flag.DurationVar(&opts.requestWriteTimeout, "request.timeout.write", 30*time.Second, "timeout for each write of the response")
+	flag.Int64Var(&opts.fileSizeLimit, "file.size-limit", defaultFileSizeLimit, "how large a file we will serve")
+	flag.Uint64Var(&opts.minPasswdUid, "passwd.min-uid", 0, "set non-zero to enable passwd lookups")
+	flag.BoolVar(&opts.showVersion, "version", false, "show version and exit")
+}
+
+func main() {
+	flag.Parse()
+
+	if opts.showVersion {
+		version()
+		return
+	}
+
+	// q: should this really be one global waitgroup instead of per-AF and entirely encapsulate in the TCPFingerListener?
+	running := &sync.WaitGroup{}
+	running.Add(1)
+	shutdown := make(chan struct{})
+
+	logger := setupLogging()
+	masterThreadLogger := logrus.NewEntry(logger).WithFields(logrus.Fields{
+		"uid": os.Getuid(),
+		"gid": os.Getgid(),
+		"pid": os.Getpid(),
+	})
+
+	haveListeners := make([]*TCPFingerListener, 0, 3)
+
+	if tmp, ok := inheritedListeners(running, shutdown, logger); ok {
+		masterThreadLogger.Infof("recovered %d listeners", len(tmp))
+		haveListeners = tmp
+	} else {
+		for _, netFamily := range []string{"tcp4", "tcp6"} {
+			fl, err := NewTCPFingerListener(netFamily, running, shutdown, logger)
+			if err != nil {
+				masterThreadLogger.WithError(err).Errorf("failed to listen/%s", netFamily)
+			} else {
+				haveListeners = append(haveListeners, fl)
+				// start below, after dropping privs and loading aliases
+			}
+		}
+	}
+
+	running.Done()
+	if len(haveListeners) == 0 {
+		// avoid chewing CPU in a tight loop if we're being constantly respawned
+		time.Sleep(time.Second)
+		masterThreadLogger.Fatal("no listeners accepted; slept 1s before exiting")
+	}
+
+	if os.Getuid() == 0 {
+		masterThreadLogger.Info("running as root, need to drop privileges")
+		dropPrivileges(haveListeners, logger)
+		// only reach here if something has gone wrong; dropPrivileges _should_ re-exec us
+		time.Sleep(time.Second)
+		masterThreadLogger.Fatal("we must drop privileges when running as root")
+	}
+
+	// We parse these _after_ dropping privileges, so the listening socket is open, but
+	// before we start the listening, so that the aliases are available without race.
+	if opts.aliasfile != "" {
+		// It's okay for the file to not exist.  Also, if it doesn't exist but later comes into existence,
+		// we accept it at that point.  A _missing_ file should not immediately blank data (might be a race
+		// between updates in a bad editor) so write an empty file first, before deleting it, if you want that.
+		//
+		// Because it's okay to not exist, we never actually fail setup and abort service.  If we lose
+		// the ability to dynamically reload then that will be logged.  It's thus in the audit trail and
+		// an acceptable degradation of service.
+		loadMappingData(logger)
+		scheduleAutoMappingDataReload(logger)
+	}
+
+	for _, fl := range haveListeners {
+		fl.GoServeThenClose()
+	}
+
+	go childReaper(logger)
+
+	masterThreadLogger.WithField("argv", os.Args).Infof("running; %d listeners", len(haveListeners))
+
+	// Hang around forever, or until signalled
+	ch := make(chan os.Signal)
+	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT)
+	masterThreadLogger.WithField("signal", <-ch).Warn("shutdown signal received")
+
+	close(shutdown)
+	running.Wait()
+
+	masterThreadLogger.Info("exiting cleanly")
+	logrus.Exit(0)
+}

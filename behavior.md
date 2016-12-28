@@ -54,7 +54,7 @@ What we do:
    "system" users.  If passwd-usage is enabled, then the command-line option
    to set a lower-bound on uid can be used (default 1000).
 5. Any invalid user, including nofinger users, should be reported as:
-     `finger: fred: no such user`
+     `finger: fred: no such user` or thereabouts
 
 
 [RFC742]: https://tools.ietf.org/html/rfc742 "RFC 742: NAME/FINGER"
