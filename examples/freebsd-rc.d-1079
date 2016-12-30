@@ -17,11 +17,12 @@ load_rc_config ${name}
 
 jail_name="finger"
 jail_fingerd="/srv/finger/bin/fingerd"
-jail_runas="65534:65534"
 jailed_pidfile="/log/pids/fingerd.pid"
 logs_dir="/jails/${jail_name}/log"
 pid_dir="${logs_dir}/pids"
 pid_dir_owner="nobody"
+runtime_user_nonjail="nobody"
+listen_spec=":1079"
 
 command="${jail_fingerd}"
 start_cmd="fingerd_start"
@@ -36,8 +37,8 @@ fingerd_prestart() {
 
 fingerd_start() {
 	# "jexec -l" adds a chdir(HOME) so fails
-	daemon -c jexec ${jail_name} \
-		${jail_fingerd} -run-as-user ${jail_runas} -pidfile=${jailed_pidfile} \
+	daemon -c jexec -u ${runtime_user_nonjail} ${jail_name} \
+		${jail_fingerd} -listen ${listen_spec} -pidfile=${jailed_pidfile} \
 		>>${logs_dir}/stdout 2>>${logs_dir}/stderr </dev/null
 }
 

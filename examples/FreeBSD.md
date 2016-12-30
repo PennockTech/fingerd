@@ -120,6 +120,38 @@ Jail.  This works well for FreeBSD where Jails provide _isolation_, not new
 _namespaces_ for userids.  In a Linux container setup with user namespaces,
 this would be an issue.
 
+### A Variation
+
+The file [freebsd-rc.d-1079](./freebsd-rc.d-1079) is almost the same as
+[freebsd-rc.d](./freebsd-rc.d) but instead of starting as root and dropping to
+a manually-specified nobody uid:gid, it instead switches to the `nobody` user
+as defined _outside_ the Jail, and starts `fingerd` listening on port 1079.
+
+You then use a packet-filter to set up port redirection; there are a number to
+choose from.  I use PF, so the rule looks something like this:
+
+```
+# /etc/pf.conf
+rdr_ifs="{ bce1, lo0 }"
+#...
+rdr on $rdr_ifs proto tcp from any to 192.0.2.3 port 79 -> 192.168.1.2 port 1079
+```
+
+In this example, the `$rdr_ifs` is a specification of the interfaces to
+perform this redirection on; you don't need to include `lo0` if you only want to
+redirect remote traffic, but without a VIMAGE kernel all traffic from jails on
+this box itself will reach the jail via `lo0` so be sure to _not_ specify
+`set skip on lo0`.
+
+The documentation IP `192.0.2.3` is used to represent the public IP address;
+the RFC1918 private address-space IP should be the same as the address in
+`ip4.addr` in `/etc/jail.conf`.  Even before the OS-less approach, I used this
+setup for my finger Jail.  The benefit is that if you do _not_ define `nat`
+rules for the Jail, then traffic can get _in_ but nothing can get out.  If
+there is a compromise, the attacker can only reach IP addresses on this one
+box (other jails, the unjailed environment).  With a VIMAGE kernel with
+per-Jail network stacks, this would be improved even further.
+
 ### Improvements to consider
 
 Don't start as root and drop privs, but bind to port 1079 and let a
