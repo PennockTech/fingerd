@@ -30,6 +30,9 @@ FreeBSD fingerd supports and we preserve:
   comma-separated); a blank line separates the output of each
 * `/W` turning on `-l` mode for subsequent usernames
 * GECOS:
+  + **Not yet supported**: we only lookup by usercode and the alias-map, not
+    by full-name, and we don't reveal the full-name, so we don't yet need
+    GECOS support.  But if we were to add it ...
   + Split on `,`; we only take the first field, but we accept that it _is_ a
     field
   + A `&` is replaced by the usercode
@@ -51,8 +54,9 @@ What we do:
 3. Absence of the project/plan/pubkey files is equivalent to presence of the
    `~/.nofinger` file
 4. By default, only users in `/home` are allowed, thus automatically rejecting
-   "system" users.  If passwd-usage is enabled, then the command-line option
-   to set a lower-bound on uid can be used (default 1000).
+   "system" users.  If passwd-usage is to be enabled, then the required
+   command-line option is the one which sets a lower-bound on the uid to be
+   used (and `0` means "passwd off", so root can not be fingered).
 5. Any invalid user, including nofinger users, should be reported as:
      `finger: fred: no such user` or thereabouts
 
