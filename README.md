@@ -44,7 +44,7 @@ No metrics are exported, only logs.
 2. Optionally system user database (passwd) access; default is to just allow
    pattern-matching against `/home/*`.  Also required for `-run-as-user` when
    starting as root (see a point below).
-3. Optional pid-file writing, log-file writing.
+3. Optional pid-file writing; logs on stderr output redirection location
 4. If need to support a hostname instead of an IP address for the syslog
    service, then whatever is needed to load hostnames data sources in your
    environment (`/etc/nsswitch.conf`, `/etc/resolv.conf`, `/etc/hosts` are

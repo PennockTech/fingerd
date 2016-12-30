@@ -59,8 +59,9 @@ FreeBSD uses "nullfs" to do what Linux calls a "bind-mount".
 
 In `/etc/rc.conf` I set `nullfs` as a network type so that mounts are deferred
 until after ZFS mounts; I could also use `late` as a mount flag on recent
-FreeBSD but since _all_ of my nullfs mounts are for exposing content inside
-Jails, and the system is ZFS, I just re-order nullfs mounts.
+FreeBSD (and did in the example above) but since _all_ of my nullfs mounts are
+for exposing content inside Jails, and the system is ZFS, I just re-order
+nullfs mounts.
 
 
 ```
@@ -95,8 +96,9 @@ we have a logs file-system which is also mounted noexec; we have access to
 the home-directories via a read-only `nullfs` mount which also disables
 execution; we have an empty Jail.
 
-The `examples/freebsd-rc.d` file, once deployed to `/path/to/my/rc.d/fingerd`,
-then does the finger start-up from outside the Jail.
+The [examples/freebsd-rc.d](./freebsd-rc.d) file, once deployed to
+`/path/to/my/rc.d/fingerd`, then does the finger start-up from outside the
+Jail.  (See below for a variation).
 
 There is no rc system inside the Jail.  There is no shell.  While mounting via
 `noexec` is not a strong security layer, when the only file-system mounted
@@ -119,6 +121,11 @@ instead of redirecting.  Also note that we open the log-files from outside the
 Jail.  This works well for FreeBSD where Jails provide _isolation_, not new
 _namespaces_ for userids.  In a Linux container setup with user namespaces,
 this would be an issue.
+
+We have no user passwd system inside the Jail, so we are specifying the
+uid:gid manually in this approach; note that FreeBSD has 32-bit uids but
+`nobody` is `65534`, so on FreeBSD `-2:-2` is _not_ the correct specification.
+We use `65534:65534`.
 
 ### A Variation
 
@@ -153,9 +160,6 @@ box (other jails, the unjailed environment).  With a VIMAGE kernel with
 per-Jail network stacks, this would be improved even further.
 
 ### Improvements to consider
-
-Don't start as root and drop privs, but bind to port 1079 and let a
-packet-filter or load-balancer redirect traffic.
 
 Add support for `jail_attach(2)` logic to fingerd, to let it self-jail, such
 that _nothing_ inside the jail needs to be mounted executable.
