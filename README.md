@@ -13,7 +13,8 @@ This can be deployed in an empty "jail" or "container" with a read-only
 This daemon will reap all children so that on platforms where the only process
 in a container must act like init, it can be used as such an init; the daemon
 does not fork but will collect and log the exit status of any other processes
-which join the container and then exit.
+which join the container and then exit.  How well this works when running as
+not-root has not been explored.
 
 We tend to reveal only the information deliberately exposed by a user and no
 local system information.  For those, use a system-native finger daemon.  Our
@@ -128,6 +129,12 @@ Enable passwd lookup and disable "exists in /home so is a user" check:
 ```sh
 /srv/fingerd -listen=:1079 -passwd.min-uid=500 -homes-dir=""
 ```
+
+## Deployment examples
+
+There is [FreeBSD](./examples/FreeBSD.md) documentation, describing setup
+within an OS-less Jail.  An `rc.d` script is included.
+
 
 [RFC742]: https://tools.ietf.org/html/rfc742 "RFC 742: NAME/FINGER"
 [AttackSurface]: ./AttackSurface.md
