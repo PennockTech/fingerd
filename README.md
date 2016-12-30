@@ -50,7 +50,10 @@ No metrics are exported, only logs.
    environment (`/etc/nsswitch.conf`, `/etc/resolv.conf`, `/etc/hosts` are
    obvious choices).  If not logging to syslog, this will not be needed.
 5. Reading `/etc/finger.conf` if it exists (alias file)
-6. If started as root, then the process needs access to re-exec itself once it
+6. `/etc` itself, to set up a watch for re-emergence of `/etc/finger.conf`
+   + This access and that of `/etc/finger.conf` can be disabled by setting
+     `-alias-file=""`
+7. If started as root, then the process needs access to re-exec itself once it
    has dropped privileges.  The file-system where this program is stored thus
    needs to be mounted to permit exec; this the only location which should
    permit exec.  The filesystem should be mounted `nosuid` _unless_ you choose
@@ -72,7 +75,7 @@ No metrics are exported, only logs.
 
 ### Customization
 
-The most likely need for customization is to change where logs go; we use the
+The most likely need for code customization is to change where logs go; we use the
 [logrus][] library which has a broad selection of plugins available to change
 formatting and destinations; edit `logging_setup.go` to add support for
 whatever is of local interest to you.
