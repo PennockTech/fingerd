@@ -16,6 +16,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"os/signal"
 	"sync"
@@ -35,6 +36,7 @@ var opts struct {
 	listen              string
 	homesDir            string
 	runAsUser           string
+	pidFile             string
 	fileSizeLimit       int64
 	listenTime          time.Duration
 	requestReadTimeout  time.Duration
@@ -48,6 +50,7 @@ func init() {
 	flag.StringVar(&opts.homesDir, "homes-dir", "/home", "where end-user home-dirs live")
 	flag.StringVar(&opts.listen, "listen", ":79", "address-spec to listen for finger requests on")
 	flag.StringVar(&opts.runAsUser, "run-as-user", "", "if starting as root, setuid to this user")
+	flag.StringVar(&opts.pidFile, "pidfile", "", "write pid to this file after bind but before listening")
 	flag.DurationVar(&opts.listenTime, "listen.at-a-time", time.Second, "accepting socket listen time (defers program exit)")
 	flag.DurationVar(&opts.requestReadTimeout, "request.timeout.read", 10*time.Second, "timeout for receiving the finger request")
 	flag.DurationVar(&opts.requestWriteTimeout, "request.timeout.write", 30*time.Second, "timeout for each write of the response")
@@ -130,6 +133,18 @@ func main() {
 
 	masterThreadLogger.WithField("argv", os.Args).Infof("running; %d listeners", len(haveListeners))
 
+	var weCreatedPidfile bool
+	if opts.pidFile != "" {
+		pf, err := os.Create(opts.pidFile)
+		if err != nil {
+			masterThreadLogger.WithError(err).WithField("pidfile", opts.pidFile).Info("unable to create pidfile")
+		} else {
+			fmt.Fprintf(pf, "%d\n", os.Getpid())
+			_ = pf.Close()
+			weCreatedPidfile = true
+		}
+	}
+
 	// Hang around forever, or until signalled
 	ch := make(chan os.Signal)
 	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT)
@@ -137,6 +152,10 @@ func main() {
 
 	close(shutdown)
 	running.Wait()
+
+	if weCreatedPidfile {
+		_ = os.Remove(opts.pidFile)
+	}
 
 	masterThreadLogger.Info("exiting cleanly")
 	logrus.Exit(0)
