@@ -167,3 +167,32 @@ that _nothing_ inside the jail needs to be mounted executable.
 Use remote syslog writing (via `-log.syslog.address`), with `-log.no-local` to
 prevent local logs, and don't set `-pidfile`, so that _nothing_ needs to be
 writable from within the jail.
+
+### Deploying Updates
+
+Initial deploy documentation is inadequate without "how to deploy a routine
+update" documentation.  How this fits into your environment is beyond the
+scope of this example, but the core steps for a setup such as described here
+boil down to:
+
+```sh
+# The unprivileged build user
+cd ~/go/src/go.pennock.tech/fingerd
+git pull
+go build -ldflags "-linkmode external -extldflags -static"
+```
+
+And as root from outside the jails:
+
+```sh
+builddir=~builduser/go/src/go.pennock.tech/fingerd
+
+zfs set readonly=off zroot/jails/finger
+install -v $builddir/fingerd /jails/finger/srv/finger/bin/./
+zfs set readonly=on zroot/jails/finger
+service fingerd restart
+
+service fingerd status
+less /jails/finger/log/stderr
+```
+

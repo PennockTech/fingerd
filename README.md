@@ -92,6 +92,12 @@ With those install steps, the binary can be found in `~/go/bin/fingerd`.
 The `go get` command will fetch this repo, any dependent repos and perform the
 build.
 
+To build as a static binary for deployment into a lib-less environment:
+
+```sh
+go build -ldflags "-linkmode external -extldflags -static"
+```
+
 ## Invoking
 
 Invoke with `-help` to see help output listing known flags and defaults.
