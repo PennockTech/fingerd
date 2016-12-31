@@ -133,6 +133,19 @@ of data presented to userland after reassembly.  We cap how much data we read
 the first newline character and ignore anything thereafter.  Thus no
 newline-injection should be possible.
 
+Each request before the first newline is whitespace separated but the contents
+of each field must be assumed malicious until proven otherwise.  In
+particular, directory separator characters should be prohibited.  Against
+that, UTF-8 home-directories might as well be allowed.  `/home/观音` is as
+valid as `/home/hera`.  We only block known directory separator characters,
+`/` and `\`.  No escape-decoding is performed, so no other forms of the
+directory separators are believed to be representable.  If a UTF-8
+normalization layer within the file-system interprets a directory separator
+out of an octet other than 0x2F then that's a file-system bug.
+
+We disallow ASCII NUL in a username.  We do not treat `@` specially, as we
+do not implement remote finger lookup so there's no reason to reject it.
+
 We impose time-limits, as well as size limits, on this reading of data.
 
 Although the protocol specifies CRLF line termination, if our request was only
