@@ -12,7 +12,7 @@ import (
 
 const fingerProgram = "fingerd"
 
-var fingerVersion string = "0.1.1"
+var fingerVersion string = "0.1.2"
 
 func version() {
 	fmt.Printf("%s: Version %s\n", fingerProgram, fingerVersion)
