@@ -88,7 +88,10 @@ func main() {
 		for _, netFamily := range []string{"tcp4", "tcp6"} {
 			fl, err := NewTCPFingerListener(netFamily, running, shutdown, logger)
 			if err != nil {
-				masterThreadLogger.WithError(err).Errorf("failed to listen/%s", netFamily)
+				// It's not an error to fail to listen on just one family (eg,
+				// system which is missing IPv4) so only Warn level.  If we got
+				// none at all, then we'll fatal out below, which will cover us.
+				masterThreadLogger.WithError(err).Warnf("failed to listen/%s", netFamily)
 			} else {
 				haveListeners = append(haveListeners, fl)
 				// start below, after dropping privs and loading aliases
