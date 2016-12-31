@@ -44,9 +44,8 @@ func (c *TCPFingerConnection) sendLine(text string) (written int64) {
 func (c *TCPFingerConnection) sendOops(prefix string) (written int64) {
 	if prefix != "" {
 		return c.sendLine(fmt.Sprintf("%s: %s", prefix, "oops"))
-	} else {
-		return c.sendLine("oops")
 	}
+	return c.sendLine("oops")
 }
 
 func (c *TCPFingerConnection) processUser() (written int64) {

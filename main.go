@@ -41,7 +41,7 @@ var opts struct {
 	listenTime          time.Duration
 	requestReadTimeout  time.Duration
 	requestWriteTimeout time.Duration
-	minPasswdUid        uint64
+	minPasswdUID        uint64
 	showVersion         bool
 }
 
@@ -55,7 +55,7 @@ func init() {
 	flag.DurationVar(&opts.requestReadTimeout, "request.timeout.read", 10*time.Second, "timeout for receiving the finger request")
 	flag.DurationVar(&opts.requestWriteTimeout, "request.timeout.write", 30*time.Second, "timeout for each write of the response")
 	flag.Int64Var(&opts.fileSizeLimit, "file.size-limit", defaultFileSizeLimit, "how large a file we will serve")
-	flag.Uint64Var(&opts.minPasswdUid, "passwd.min-uid", 0, "set non-zero to enable passwd lookups")
+	flag.Uint64Var(&opts.minPasswdUID, "passwd.min-uid", 0, "set non-zero to enable passwd lookups")
 	flag.BoolVar(&opts.showVersion, "version", false, "show version and exit")
 }
 
@@ -111,6 +111,11 @@ func main() {
 		masterThreadLogger.Fatal("we must drop privileges when running as root")
 	}
 
+	// Set up signal handling as soon as we've dropped privs, even though we'll
+	// not act on it until late.
+	ch := make(chan os.Signal)
+	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT)
+
 	// We parse these _after_ dropping privileges, so the listening socket is open, but
 	// before we start the listening, so that the aliases are available without race.
 	if opts.aliasfile != "" {
@@ -125,14 +130,7 @@ func main() {
 		scheduleAutoMappingDataReload(logger)
 	}
 
-	for _, fl := range haveListeners {
-		fl.GoServeThenClose()
-	}
-
-	go childReaper(logger)
-
-	masterThreadLogger.WithField("argv", os.Args).Infof("running; %d listeners", len(haveListeners))
-
+	// Pidfile must be after bind, but before listening.
 	var weCreatedPidfile bool
 	if opts.pidFile != "" {
 		pf, err := os.Create(opts.pidFile)
@@ -145,9 +143,21 @@ func main() {
 		}
 	}
 
+	// From this point on, we're sufficiently init-like to pass muster.
+	go childReaper(logger)
+
+	// From this point on, we're accepting connection.
+	for _, fl := range haveListeners {
+		fl.GoServeThenClose()
+	}
+
+	masterThreadLogger.WithFields(logrus.Fields{
+		"argv":      os.Args,
+		"version":   currentVersion(),
+		"listeners": len(haveListeners),
+	}).Info("running")
+
 	// Hang around forever, or until signalled
-	ch := make(chan os.Signal)
-	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT)
 	masterThreadLogger.WithField("signal", <-ch).Warn("shutdown signal received")
 
 	close(shutdown)

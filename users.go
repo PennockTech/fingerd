@@ -77,7 +77,7 @@ func findUser(username string, log logrus.FieldLogger) (fingerUser, bool) {
 		username = target
 	}
 
-	if opts.minPasswdUid != 0 {
+	if opts.minPasswdUID != 0 {
 		f, ok, authoritative := findUserByPasswd(username, log)
 		if authoritative {
 			return f, ok
@@ -125,7 +125,7 @@ func findUserByPasswd(username string, log logrus.FieldLogger) (
 		return fingerUser{}, false, false
 	}
 
-	if uid64 < opts.minPasswdUid {
+	if uid64 < opts.minPasswdUID {
 		return fingerUser{}, false, true
 	}
 

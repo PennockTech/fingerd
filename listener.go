@@ -17,6 +17,12 @@ import (
 	"github.com/Sirupsen/logrus"
 )
 
+// TCPFingerListener wraps up everything around listening for connections on a
+// per-protocol basis.  We do not assume sockets accept both IPv4 and IPv6, so
+// instead individually explicitly bind each.  (That's a portability issue, the
+// BSDs switched to blocking both by default on a v6 socket, Linux still does
+// both by default, and both allow this default to by changed via sysctl/proc,
+// or on a per-socket basis.)
 type TCPFingerListener struct {
 	// The logger is only used once in spawned go-routines; within the main control, errors are returned
 	// to the caller to log as appropriate
@@ -28,6 +34,9 @@ type TCPFingerListener struct {
 	tcpListener   *net.TCPListener
 }
 
+// TCPFingerConnection is the state for one connection.  It has fields which
+// mutate on a per-user basis when handling multiple user-names on one
+// connection.
 type TCPFingerConnection struct {
 	*logrus.Entry
 	conn *net.TCPConn
@@ -47,6 +56,9 @@ type TCPFingerConnection struct {
 	writeError bool
 }
 
+// NewTCPFingerListener wraps up the normal path for creating a finger listener.
+// Note that we can also manually construct the type via inheritedListeners() for
+// when we've re-exec'd ourselves.
 func NewTCPFingerListener(
 	networkFamily string,
 	wg *sync.WaitGroup,
@@ -83,6 +95,9 @@ func NewTCPFingerListener(
 	return fl, nil
 }
 
+// GoServeThenClose wraps the start-up of a listener; this handles spawning the
+// go-routine; do not also wrap this in a go-routing other than the one which
+// later listens on the active waitgroup.
 func (fl *TCPFingerListener) GoServeThenClose() {
 	fl.active.Add(1)
 	fl.Info("listening")

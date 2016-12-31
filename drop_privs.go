@@ -31,12 +31,12 @@ const envKeyFdPassing = "FINGERD_fdstatus"
 //
 // We do not fork/exec: we are supposed to be usable as the init of a process
 // namespace and should persist with our original pid.
-func dropPrivileges(tfls []*TCPFingerListener, logger_ *logrus.Logger) {
+func dropPrivileges(tfls []*TCPFingerListener, bareLogger *logrus.Logger) {
 	if opts.runAsUser == "" {
-		logger_.Error("root drop privs: missing --run-as-user to drop privileges to")
+		bareLogger.Error("root drop privs: missing --run-as-user to drop privileges to")
 		return
 	}
-	log := logger_.WithField("run-as-user", opts.runAsUser)
+	log := bareLogger.WithField("run-as-user", opts.runAsUser)
 
 	var (
 		uid, gid       int
