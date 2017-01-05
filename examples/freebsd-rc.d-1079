@@ -16,9 +16,13 @@ load_rc_config ${name}
 : ${fingerd_enable:=NO}
 
 jail_name="finger"
+
+jail_root="$(jls -j "${jail_name}" path)"
+JID=$(jls -j ${jail_name} jid)
+
 jail_fingerd="/srv/finger/bin/fingerd"
 jailed_pidfile="/log/pids/fingerd.pid"
-logs_dir="/jails/${jail_name}/log"
+logs_dir="${jail_root}/log"
 pid_dir="${logs_dir}/pids"
 pid_dir_owner="nobody"
 runtime_user_nonjail="nobody"
@@ -27,8 +31,7 @@ listen_spec=":1079"
 command="${jail_fingerd}"
 start_cmd="fingerd_start"
 start_precmd="fingerd_prestart"
-pidfile="/jails/${jail_name}${jailed_pidfile}"
-JID=$(jls -j ${jail_name} jid)
+pidfile="${jail_root}${jailed_pidfile}"
 
 fingerd_prestart() {
 	mkdir -p -m 0755 "${pid_dir}"

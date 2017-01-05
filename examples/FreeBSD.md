@@ -127,6 +127,9 @@ uid:gid manually in this approach; note that FreeBSD has 32-bit uids but
 `nobody` is `65534`, so on FreeBSD `-2:-2` is _not_ the correct specification.
 We use `65534:65534`.
 
+nb: the version below has been fixed to not make assumptions about jail paths,
+but this version here has been left unfixed-but-tested-known-working.
+
 ### A Variation
 
 The file [freebsd-rc.d-1079](./freebsd-rc.d-1079) is almost the same as
@@ -158,6 +161,9 @@ rules for the Jail, then traffic can get _in_ but nothing can get out.  If
 there is a compromise, the attacker can only reach IP addresses on this one
 box (other jails, the unjailed environment).  With a VIMAGE kernel with
 per-Jail network stacks, this would be improved even further.
+
+This version also uses `jls` to fetch the path to the jail; thus there are no
+assumptions around `/jails/${jail_name}`.
 
 ### Improvements to consider
 
