@@ -147,4 +147,4 @@ within an OS-less Jail.  An `rc.d` script is included.
 
 [RFC742]: https://tools.ietf.org/html/rfc742 "RFC 742: NAME/FINGER"
 [AttackSurface]: ./AttackSurface.md
-[logrus]: https://github.com/Sirupsen/logrus "logrus: Structured, pluggable logging for Go"
+[logrus]: https://github.com/sirupsen/logrus "logrus: Structured, pluggable logging for Go"

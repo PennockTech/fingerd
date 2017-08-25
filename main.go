@@ -23,7 +23,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 // I initially set 64 and in my first tests hit this because of an 84K .pubkey

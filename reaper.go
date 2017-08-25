@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 // We expect to be the only process running inside a jail/container, so we

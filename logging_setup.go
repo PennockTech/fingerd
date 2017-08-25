@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Sirupsen/logrus"
-	logrus_syslog "github.com/Sirupsen/logrus/hooks/syslog"
+	"github.com/sirupsen/logrus"
+	logrus_syslog "github.com/sirupsen/logrus/hooks/syslog"
 )
 
 var logOpts struct {
@@ -33,7 +33,7 @@ func init() {
 }
 
 // setupLogging should be changed to add whatever remote logging you want;
-// <https://github.com/Sirupsen/logrus> lists a variety of supported hooks for
+// <https://github.com/sirupsen/logrus> lists a variety of supported hooks for
 // remote logging, whether into corporate log services, cloud log services,
 // chat services, email, error/exception aggregation services or whatever else.
 //
