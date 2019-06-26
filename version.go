@@ -1,4 +1,4 @@
-// Copyright © 2016 Pennock Tech, LLC.
+// Copyright © 2016,2019 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
@@ -13,7 +13,7 @@ import (
 
 const fingerProgram = "fingerd"
 
-var fingerVersion = "0.1.3"
+var fingerVersion = "0.1.4"
 
 // Pull the version derivation from whatever variables go into the makeup out
 // into a function so that we can log it at startup.

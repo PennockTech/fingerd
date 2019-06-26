@@ -1,4 +1,4 @@
-// Copyright © 2016 Pennock Tech, LLC.
+// Copyright © 2016,2019 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
@@ -17,6 +17,22 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+var (
+	aLongTimeAgo = time.Unix(1, 0)
+)
+
+// Golang does after all have a way to abort a current listen(2) call for a new
+// connection; you can change the read timeout on the socket and existing
+// listen(2) calls will return if need be.  So we don't need to periodically
+// awaken to check if we're exiting.
+type DeadlineableTCPListener interface {
+	AcceptTCP() (*net.TCPConn, error)
+	File() (*os.File, error)
+	SetDeadline(time.Time) error
+	Addr() net.Addr
+	Close() error
+}
+
 // TCPFingerListener wraps up everything around listening for connections on a
 // per-protocol basis.  We do not assume sockets accept both IPv4 and IPv6, so
 // instead individually explicitly bind each.  (That's a portability issue, the
@@ -31,7 +47,7 @@ type TCPFingerListener struct {
 	networkFamily string
 	active        *sync.WaitGroup
 	shuttingDown  <-chan struct{}
-	tcpListener   *net.TCPListener
+	tcpListener   DeadlineableTCPListener
 }
 
 // TCPFingerConnection is the state for one connection.  It has fields which
@@ -102,6 +118,13 @@ func (fl *TCPFingerListener) GoServeThenClose() {
 	fl.active.Add(1)
 	fl.Info("listening")
 	go fl.serveThenClose()
+	go fl.terminateOnShuttingDown()
+}
+
+// When told to shut down, cause the listen() to return.
+func (fl *TCPFingerListener) terminateOnShuttingDown() {
+	<-fl.shuttingDown
+	fl.tcpListener.SetDeadline(aLongTimeAgo)
 }
 
 func (fl *TCPFingerListener) serveThenClose() {
@@ -121,13 +144,11 @@ LOOP:
 			break LOOP
 		default:
 		}
-		// If this _is_ overriden to 0, then shutdown via signal will not exit
-		// until after a connection on each listening service.
-		if opts.listenTime != 0 {
-			fl.tcpListener.SetDeadline(time.Now().Add(opts.listenTime))
-		}
+
+		fl.tcpListener.SetDeadline(time.Time{})
 		conn, err := fl.tcpListener.AcceptTCP()
 		acceptedAt := time.Now()
+
 		if err != nil {
 			if opErr, ok := err.(*net.OpError); ok && opErr.Timeout() {
 				fl.Debug("expected timeout accepting connection")
@@ -136,6 +157,7 @@ LOOP:
 			fl.WithError(err).Error("accepting connection")
 			continue
 		}
+
 		fl.active.Add(1)
 		c := &TCPFingerConnection{
 			// not sure that Entry is go-routine-safe, so spawn a new Entry

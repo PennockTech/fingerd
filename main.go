@@ -1,4 +1,4 @@
-// Copyright © 2016 Pennock Tech, LLC.
+// Copyright © 2016,2019 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
@@ -38,7 +38,6 @@ var opts struct {
 	runAsUser           string
 	pidFile             string
 	fileSizeLimit       int64
-	listenTime          time.Duration
 	requestReadTimeout  time.Duration
 	requestWriteTimeout time.Duration
 	minPasswdUID        uint64
@@ -51,12 +50,15 @@ func init() {
 	flag.StringVar(&opts.listen, "listen", ":79", "address-spec to listen for finger requests on")
 	flag.StringVar(&opts.runAsUser, "run-as-user", "", "if starting as root, setuid to this user")
 	flag.StringVar(&opts.pidFile, "pidfile", "", "write pid to this file after bind but before listening")
-	flag.DurationVar(&opts.listenTime, "listen.at-a-time", time.Second, "accepting socket listen time (defers program exit)")
 	flag.DurationVar(&opts.requestReadTimeout, "request.timeout.read", 10*time.Second, "timeout for receiving the finger request")
 	flag.DurationVar(&opts.requestWriteTimeout, "request.timeout.write", 30*time.Second, "timeout for each write of the response")
 	flag.Int64Var(&opts.fileSizeLimit, "file.size-limit", defaultFileSizeLimit, "how large a file we will serve")
 	flag.Uint64Var(&opts.minPasswdUID, "passwd.min-uid", 0, "set non-zero to enable passwd lookups")
 	flag.BoolVar(&opts.showVersion, "version", false, "show version and exit")
+
+	// TODO: remove this in a future release
+	var listenTime time.Duration
+	flag.DurationVar(&listenTime, "listen.at-a-time", 0, "defunct and does nothing (will be removed in a future release)")
 }
 
 func main() {
