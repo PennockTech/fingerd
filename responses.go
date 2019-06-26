@@ -186,7 +186,7 @@ func (c *TCPFingerConnection) sendFile(filename, prefix string) (written int64) 
 	}
 
 	if fi.Mode()&os.ModeType != 0 {
-		log.Infof("pretending non-existent because not a file but instead: %s", fi.Mode().String()[0])
+		log.Infof("pretending non-existent because not a file but instead: %c", fi.Mode().String()[0])
 		return 0
 	}
 

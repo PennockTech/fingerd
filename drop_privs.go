@@ -88,7 +88,7 @@ func dropPrivileges(tfls []*TCPFingerListener, bareLogger *logrus.Logger) {
 		// This actually does a dup() and probably has FD_CLOEXEC cleared, but we lack a Golang guarantee that it's cleared.
 		fd, err := tfls[i].tcpListener.File()
 		if err != nil {
-			log.WithError(err).Error("unable to get fd from listener (%s)", tfls[i].networkFamily)
+			log.WithError(err).Errorf("unable to get fd from listener (%s)", tfls[i].networkFamily)
 			runtime.UnlockOSThread()
 			return
 		}
@@ -171,11 +171,11 @@ func inheritedListeners(
 		f := os.NewFile(uintptr(fd), fields[0])
 		listener, err := net.FileListener(f)
 		if err != nil {
-			recoveryLogger.WithError(err).Fatal("unable to make a net listener from fd entry %d", i)
+			recoveryLogger.WithError(err).Fatalf("unable to make a net listener from fd entry %d", i)
 		}
 		tl, ok := listener.(*net.TCPListener)
 		if !ok {
-			recoveryLogger.Fatal("net listener from fd entry %d not a *net.TCPListener", i)
+			recoveryLogger.Fatalf("net listener from fd entry %d not a *net.TCPListener", i)
 		}
 
 		fl := &TCPFingerListener{
