@@ -80,6 +80,26 @@ The most likely need for code customization is to change where logs go; we use t
 formatting and destinations; edit `logging_setup.go` to add support for
 whatever is of local interest to you.
 
+## Platform Limitations
+
+### Linux
+
+Golang and Linux do not play nicely when it comes to dropping privileges of
+the currently running process; see <https://github.com/golang/go/issues/1435>
+for the gory details.
+
+Thus on Linux, if you attempt to run as root then the attempt to drop
+privileges will likely fail, and `fingerd` won't run.  There's no sane
+reliable way to make this work without risking introducing race conditions
+leading to security holes.
+
+So on Linux, you'll need to run as an unprivileged user and either use
+external packet redirection or use `CAP_NET_BIND_SERVICE`:
+
+```console
+$ sudo setcap cap_net_bind_service=+ep fingerd
+```
+
 ## Installation
 
 ```console
