@@ -118,8 +118,8 @@ func main() {
 
 	// Set up signal handling as soon as we've dropped privs, even though we'll
 	// not act on it until late.
-	ch := make(chan os.Signal)
-	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT)
+	signalShutdownCh := make(chan os.Signal)
+	signal.Notify(signalShutdownCh, syscall.SIGTERM, syscall.SIGINT)
 
 	// We parse these _after_ dropping privileges, so the listening socket is open, but
 	// before we start the listening, so that the aliases are available without race.
@@ -163,7 +163,7 @@ func main() {
 	}).Info("running")
 
 	// Hang around forever, or until signalled
-	masterThreadLogger.WithField("signal", <-ch).Warn("shutdown signal received")
+	masterThreadLogger.WithField("signal", <-signalShutdownCh).Warn("shutdown signal received")
 
 	close(shutdown)
 	running.Wait()

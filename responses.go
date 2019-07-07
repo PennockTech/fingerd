@@ -1,4 +1,4 @@
-// Copyright © 2016 Pennock Tech, LLC.
+// Copyright © 2016,2019 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
@@ -83,7 +83,7 @@ func (c *TCPFingerConnection) processUser() (written int64) {
 		return c.sendLine(noSuchUserText)
 	}
 
-	// We now decree that the user does exist.
+	// We now will admit that the user does exist (real or alias)
 
 	written += c.sendLine(fmt.Sprintf("User: %s", c.username))
 	if c.writeError {
@@ -131,9 +131,14 @@ func (c *TCPFingerConnection) homeFileValid(fi os.FileInfo) bool {
 	if fi.Size() == 0 {
 		return false
 	}
+	// In code at time this comment was written, we use Stat not Lstat, so a
+	// ModeSymlink means that the symlink was dangling.  So is invalid.
 	switch fi.Mode() & os.ModeType {
-	case 0, os.ModeSymlink:
+	case 0:
 		break
+	case os.ModeSymlink:
+		c.WithField("filename", fi.Name()).Warn("bug in code: got a symlink result")
+		return false
 	default:
 		return false
 	}
@@ -142,8 +147,13 @@ func (c *TCPFingerConnection) homeFileValid(fi os.FileInfo) bool {
 		c.WithField("filename", fi.Name()).Warnf("bug in code for platform: stat.Sys() not Stat_t but instead %T", fi.Sys())
 		return false
 	}
-	// here we do allow root-owned _symlinks_ ... I guess
-	if stat.Uid != 0 && stat.Uid != c.uid {
+	// At this point, we don't have a stat on the symlink-or-file in the user's
+	// home directory, only the result of any symlink chains.
+	// This check is based upon stat of filenames, we repeat below based upon
+	// stat of opened files, to avoid time-of-test-to-time-of-use (TOTTTOU)
+	// attacks.
+	if stat.Uid != c.uid {
+		c.WithField("filename", fi.Name()).Warnf("Local user possible attack; pretending non-existent because owned %d but expected %d", stat.Uid, c.uid)
 		return false
 	}
 	return true
@@ -156,7 +166,8 @@ func (c *TCPFingerConnection) sendFile(filename, prefix string) (written int64) 
 		filename = filepath.Join(c.homeDir, filename)
 	}
 	// We expect the existence of the file to have already been established.
-	// So this should be rare; there's a risk via race if the user
+	// So this should be rare; there's a risk via race if the user is mutating
+	// their homedir under us.
 	f, err := os.Open(filename)
 	log := c.WithField("file", filename)
 	if err != nil {
@@ -197,8 +208,9 @@ func (c *TCPFingerConnection) sendFile(filename, prefix string) (written int64) 
 			log.Warnf("pretending non-existent because bug in code for platform: stat.Sys() not Stat_t but instead %T", fi.Sys())
 			return 0
 		}
+		// We checked at stat time above, so if this is triggering now, it's an actual race and more malicious.
 		if stat.Uid != c.uid {
-			log.Warnf("LOCAL USER ATTACK; pretending non-existent because owned %d but expected %d", stat.Uid, c.uid)
+			log.Warnf("LOCAL USER RACE ATTACK (TOTTTOU PROTECTION); pretending non-existent because owned %d but expected %d", stat.Uid, c.uid)
 			return 0
 		}
 	}

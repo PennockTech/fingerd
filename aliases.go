@@ -147,6 +147,10 @@ func scheduleAutoMappingDataReload(log logrus.FieldLogger) {
 					} else if event.Op&fsnotify.Remove == fsnotify.Remove || event.Op&fsnotify.Rename == fsnotify.Rename {
 						l.Info("gone, removing watch")
 						watcher.Remove(opts.aliasfile)
+						// TODO: should we also remove all aliases?
+						// We currently continue running with the last aliases seen, which lets us
+						// steady-state on the assumption that the file is being replaced.  Perhaps
+						// we should start a timer and after 5 seconds, nuke the loaded aliases?
 					}
 					// no other scenarios known
 				case dirname:

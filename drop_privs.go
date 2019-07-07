@@ -31,6 +31,12 @@ const envKeyFdPassing = "FINGERD_fdstatus"
 //
 // We do not fork/exec: we are supposed to be usable as the init of a process
 // namespace and should persist with our original pid.
+//
+// It seems that this will _probably_ fail on Linux, thus on that platform the
+// process will simply not survive long enough to start listening after binding
+// the socket.  I am disinclined to chase for a way to make that possible, when
+// it's better to just listen on a non-standard port or use
+// CAP_NET_BIND_SERVICE instead.
 func dropPrivileges(tfls []*TCPFingerListener, bareLogger *logrus.Logger) {
 	if opts.runAsUser == "" {
 		bareLogger.Error("root drop privs: missing --run-as-user to drop privileges to")
@@ -116,6 +122,7 @@ func dropPrivileges(tfls []*TCPFingerListener, bareLogger *logrus.Logger) {
 		runtime.UnlockOSThread()
 		return
 	}
+	// This will probably fail on Linux, despite our best efforts
 	if err := syscall.Setuid(uid); err != nil {
 		log.WithError(err).Errorf("Unable to setuid(%d)", uid)
 		runtime.UnlockOSThread()

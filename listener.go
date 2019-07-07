@@ -40,8 +40,9 @@ type DeadlineableTCPListener interface {
 // both by default, and both allow this default to by changed via sysctl/proc,
 // or on a per-socket basis.)
 type TCPFingerListener struct {
-	// The logger is only used once in spawned go-routines; within the main control, errors are returned
-	// to the caller to log as appropriate
+	// The logger is only used after entering into spawned go-routines;
+	// within the main control, errors are returned to the caller to log as
+	// appropriate
 	*logrus.Entry
 
 	networkFamily string
@@ -102,7 +103,6 @@ func NewTCPFingerListener(
 			fl.networkFamily, opts.listen, listener)
 	}
 
-	//fl.Entry = logrus.NewEntry(logger).WithFields(logrus.Fields{
 	fl.Entry = logger.WithFields(logrus.Fields{
 		"family": fl.networkFamily,
 		"accept": fl.tcpListener.Addr(),
@@ -112,10 +112,10 @@ func NewTCPFingerListener(
 }
 
 // GoServeThenClose wraps the start-up of a listener; this handles spawning the
-// go-routine; do not also wrap this in a go-routing other than the one which
+// go-routine; do not also wrap this in a go-routine other than the one which
 // later listens on the active waitgroup.
 func (fl *TCPFingerListener) GoServeThenClose() {
-	fl.active.Add(1)
+	fl.active.Add(2)
 	fl.Info("listening")
 	go fl.serveThenClose()
 	go fl.terminateOnShuttingDown()
@@ -123,6 +123,8 @@ func (fl *TCPFingerListener) GoServeThenClose() {
 
 // When told to shut down, cause the listen() to return.
 func (fl *TCPFingerListener) terminateOnShuttingDown() {
+	defer fl.active.Done()
+	// Waits almost the lifetime of the process:
 	<-fl.shuttingDown
 	fl.tcpListener.SetDeadline(aLongTimeAgo)
 }
@@ -137,6 +139,11 @@ func (fl *TCPFingerListener) serveThenClose() {
 		fl.active.Done()
 	}()
 
+	// We never change this until the end when it indicates shutdown; a zero
+	// value means no deadline.  This _should_ be the default but since we're
+	// using this as a control mechanism, be explicit.
+	fl.tcpListener.SetDeadline(time.Time{})
+
 LOOP:
 	for {
 		select {
@@ -145,20 +152,22 @@ LOOP:
 		default:
 		}
 
-		fl.tcpListener.SetDeadline(time.Time{})
 		conn, err := fl.tcpListener.AcceptTCP()
 		acceptedAt := time.Now()
 
 		if err != nil {
 			if opErr, ok := err.(*net.OpError); ok && opErr.Timeout() {
-				fl.Debug("expected timeout accepting connection")
+				fl.Debug("timeout accepting connection, should mean that we're shutting down")
 				continue
 			}
 			fl.WithError(err).Error("accepting connection")
 			continue
 		}
 
-		fl.active.Add(1)
+		// nb: LocalAddr/RemoteAddr are cached attributes, not dynamically
+		// retrieved via syscalls (although I don't think that's guaranteed);
+		// thus they won't fail if the remote side has immediately disconnected
+		// and we don't need to worry about panics or errors when using them.
 		c := &TCPFingerConnection{
 			// not sure that Entry is go-routine-safe, so spawn a new Entry
 			// from the Logger for each go-routine
@@ -170,6 +179,7 @@ LOOP:
 			l:    fl,
 			conn: conn,
 		}
+		fl.active.Add(1)
 		go c.handleOneConnection()
 	}
 
@@ -226,9 +236,9 @@ func (c *TCPFingerConnection) handleOneConnection() {
 		c.crlf = false
 		input = input[:l-1]
 	}
-	// nb: we stopped parsing at the first newline, so there might be an extra
-	// CR in here, but that's the logging library's responsibility to escape if
-	// needed.
+	// nb: we stopped parsing at the first newline, so there might be extra CRs
+	// scattered in here, but that's the logging library's responsibility to
+	// escape if needed.
 	c.WithField("request", input).Info("received")
 
 	seen := false

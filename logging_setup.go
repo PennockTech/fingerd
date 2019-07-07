@@ -1,4 +1,4 @@
-// Copyright © 2016 Pennock Tech, LLC.
+// Copyright © 2016,2019 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
@@ -16,6 +16,7 @@ import (
 )
 
 var logOpts struct {
+	level        string
 	json         bool
 	syslogRemote string
 	syslogProto  string
@@ -24,6 +25,7 @@ var logOpts struct {
 }
 
 func init() {
+	flag.StringVar(&logOpts.level, "log.level", "info", "logging level (\"help\" to list)")
 	flag.BoolVar(&logOpts.json, "log.json", false, "format logs into JSON")
 	flag.BoolVar(&logOpts.noLocal, "log.no-local", false, "inhibit stdio logging, only use any log hooks (syslog)")
 	flag.StringVar(&logOpts.syslogRemote, "log.syslog.address", "", "host:port to send logs to via syslog")
@@ -60,6 +62,17 @@ func setupLogging() *logrus.Logger {
 	if logOpts.json {
 		l.Formatter = &logrus.JSONFormatter{}
 	}
+
+	if logOpts.level == "" || logOpts.level == "help" {
+		l.Infof("Available logging levels: %v", logrus.AllLevels)
+		os.Exit(0)
+	}
+	lvl, err := logrus.ParseLevel(logOpts.level)
+	if err != nil {
+		time.Sleep(time.Second)
+		l.Fatalf("unable to parse logging level %q", logOpts.level)
+	}
+	l.SetLevel(lvl)
 
 	// nb: looks like logrus_syslog as a hook is not filtering out ANSI color
 	// escape sequences.  So probably best to just use with JSON.  Or tell me

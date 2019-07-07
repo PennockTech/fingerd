@@ -67,7 +67,8 @@ func findUser(username string, log logrus.FieldLogger) (fingerUser, bool) {
 	// If upper-case characters are in the username on-disk, we'll only work if
 	// the filesystem is case-insensitive.  If this bites you, please file a
 	// bug report (which should include a good rationale if it's not a
-	// pull-request for working code you're contributing).
+	// pull-request for working code you're contributing ... and a decent
+	// rationale even with a pull-request).
 	username = strings.ToLower(username)
 
 	if target, ok := redirect[username]; ok {
@@ -89,7 +90,7 @@ func findUser(username string, log logrus.FieldLogger) (fingerUser, bool) {
 	if opts.homesDir != "" {
 		candidate := filepath.Join(opts.homesDir, username)
 		// users should not be able to rebind their home-dirs to be symlinks or whatever
-		fi, err := os.Stat(candidate)
+		fi, err := os.Lstat(candidate)
 		switch {
 		case err != nil:
 			// break out here if want other types of lookup even if homesDir is set
@@ -119,6 +120,8 @@ func findUserByPasswd(username string, log logrus.FieldLogger) (
 		return fingerUser{}, false, false
 	}
 
+	// We don't make 32 configurable or extracted because we use the concrete
+	// type uint32 below.
 	uid64, err := strconv.ParseUint(u.Uid, 10, 32)
 	if err != nil {
 		log.WithError(err).Infof("error parsing passwd uid %q", u.Uid)
@@ -131,20 +134,24 @@ func findUserByPasswd(username string, log logrus.FieldLogger) (
 
 	uid := uint32(uid64)
 
+	// Here we do allow symlinks, if that's explicitly what's listed in /etc/passwd.
+	// Ugh.
 	fi, err := os.Stat(u.HomeDir)
 	switch {
 	case err != nil:
 		log.WithError(err).Info("passwd user homedir won't stat")
 		return fingerUser{}, false, false // consider for auth: opts.passwdHomedirOrBust ?
 	case fi.IsDir():
-		// we don't care what the ownership of the dir is, passwd is authoritative
+		// We don't _directly_ care what the ownership of the dir is, passwd is
+		// authoritative for what the ownership of the files within needs to
+		// be.
 		return fingerUser{
 			homeDir:  u.HomeDir,
 			uid:      uid,
 			homeStat: fi,
 		}, true, true
 	}
-	log.WithField("not-dir", u.HomeDir).Warn("passwd user homedir not a directory")
+	log.WithField("not-dir", u.HomeDir).WithField("mode", fi.Mode().String()).Warn("passwd user homedir not a directory")
 	return fingerUser{}, false, false
 
 }

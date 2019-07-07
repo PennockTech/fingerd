@@ -59,6 +59,8 @@ No metrics are exported, only logs.
    permit exec.  The filesystem should be mounted `nosuid` _unless_ you choose
    to use setcap instead of a packet filter.  Please use a packet filter
    instead.
+   + The privilege dropping does not succeed on Linux and we do safely error
+     out correctly.  Do not start as root on Linux.  See below.
 
 ### Inbound network access required:
 
@@ -102,6 +104,9 @@ $ sudo setcap cap_net_bind_service=+ep fingerd
 
 ## Installation
 
+The first two steps are implicit in moderately recent versions of Go but are
+listed for completeness:
+
 ```console
 $ mkdir ~/go
 $ export GOPATH="$HOME/go"
@@ -118,9 +123,15 @@ To build as a static binary for deployment into a lib-less environment:
 go build -ldflags "-linkmode external -extldflags -static"
 ```
 
+The code uses Go Modules, so you can instead clone the git repo and use
+`go build` inside it, without needing to worry about a `$GOPATH`; this
+requires Go 1.12 or newer (or Go 1.11 with some env-var enabling).
+
 ## Invoking
 
 Invoke with `-help` to see help output listing known flags and defaults.
+
+Beware that the `-run-as-user` examples are likely to fail on Linux.
 
 If starting as root, dropping to nobody, redirecting logs to someplace, and
 all the users are in `/home/*`:
