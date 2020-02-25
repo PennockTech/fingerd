@@ -38,6 +38,7 @@ jobs:
             : "${IMAGE_NAME:=pennocktech/fingerd}"
             TAG="$(git describe --tags --always --dirty)"
             if [ "$(git describe --abbrev=0)" = "$TAG" ]; then RELEASE=true; else RELEASE=false; fi
+            TAG="${TAG#v}"
             typeset -p IMAGE_NAME TAG RELEASE > /tmp/persist/docker-env.sh
             docker build -f examples/Dockerfile -t "$IMAGE_NAME:$TAG" .
             docker save -o /tmp/persist/docker-layers.tar "$IMAGE_NAME:$TAG"
