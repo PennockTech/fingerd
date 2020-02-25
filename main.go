@@ -1,4 +1,4 @@
-// Copyright © 2016,2019 Pennock Tech, LLC.
+// Copyright © 2016,2019,2020 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
@@ -34,6 +34,7 @@ const defaultFileSizeLimit = 256 * 1024
 var opts struct {
 	aliasfile           string
 	listen              string
+	listenEnv           string
 	homesDir            string
 	runAsUser           string
 	pidFile             string
@@ -48,6 +49,7 @@ func init() {
 	flag.StringVar(&opts.aliasfile, "alias-file", "/etc/finger.conf", "file to read aliases from (if it exists)")
 	flag.StringVar(&opts.homesDir, "homes-dir", "/home", "where end-user home-dirs live")
 	flag.StringVar(&opts.listen, "listen", ":79", "address-spec to listen for finger requests on")
+	flag.StringVar(&opts.listenEnv, "listen-env", "", "environment variable to use as -listen (takes precedence)")
 	flag.StringVar(&opts.runAsUser, "run-as-user", "", "if starting as root, setuid to this user")
 	flag.StringVar(&opts.pidFile, "pidfile", "", "write pid to this file after bind but before listening")
 	flag.DurationVar(&opts.requestReadTimeout, "request.timeout.read", 10*time.Second, "timeout for receiving the finger request")

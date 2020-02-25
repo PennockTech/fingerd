@@ -1,4 +1,4 @@
-// Copyright © 2016,2019 Pennock Tech, LLC.
+// Copyright © 2016,2019,2020 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
@@ -9,11 +9,9 @@ import (
 	"runtime"
 )
 
-// TODO: figure out if we want to bother with a makefile and git-derived version tagging, as used elsewhere
-
 const fingerProgram = "fingerd"
 
-var fingerVersion = "0.1.4"
+var fingerVersion = "0.1.5"
 
 // Pull the version derivation from whatever variables go into the makeup out
 // into a function so that we can log it at startup.

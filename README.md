@@ -120,7 +120,10 @@ build.
 To build as a static binary for deployment into a lib-less environment:
 
 ```sh
+## Either:
 go build -ldflags "-linkmode external -extldflags -static"
+## Or:
+go build -ldflags -s
 ```
 
 The code uses Go Modules, so you can instead clone the git repo and use
@@ -170,10 +173,43 @@ Enable passwd lookup and disable "exists in /home so is a user" check:
 /srv/fingerd -listen=:1079 -passwd.min-uid=500 -homes-dir=""
 ```
 
+Running where you want to get the port from an environment variable, but don't
+want to require a shell to interpolate that into the parameter list:
+
+```sh
+/srv/fingerd -listen-var=PORT
+```
+
 ## Deployment examples
 
 There is [FreeBSD](./examples/FreeBSD.md) documentation, describing setup
 within an OS-less Jail.  An `rc.d` script is included.
+
+### Docker
+
+There is a [Dockerfile](./examples/Dockerfile) which builds a small container
+image.
+
+Build with:
+
+```sh
+docker build -f examples/Dockerfile -t fingerd .
+```
+
+The image uses `fingerd` as the entry-point, so any parameters used to launch
+it are flags to `fingerd`.  It uses `$PORT` to get the listening port,
+defaulting to 1079.  It's up to you to map that to port 79 "somewhere".
+The image runs unprivileged, using nothing in `/etc`.
+
+To test locally:
+```console
+ttyONE$ docker run -v /home:/home:ro -p 79:1079 -it --rm fingerd
+
+ttyTWO$ finger $USER@localhost
+```
+
+(You will of course need a `.plan`, `.project` or `.pubkey` in your home
+directory for that to work.)
 
 
 [RFC742]: https://tools.ietf.org/html/rfc742 "RFC 742: NAME/FINGER"

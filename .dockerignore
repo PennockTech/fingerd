@@ -1,0 +1,5 @@
+# Warning: only exclude things also excluded by git.
+# Otherwise, `git describe` inside the build container will see
+# the repository as dirty and stamp the binary version as such.
+
+/fingerd

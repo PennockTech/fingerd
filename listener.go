@@ -1,4 +1,4 @@
-// Copyright © 2016,2019 Pennock Tech, LLC.
+// Copyright © 2016,2019,2020 Pennock Tech, LLC.
 // All rights reserved, except as granted under license.
 // Licensed per file LICENSE.txt
 
@@ -92,7 +92,12 @@ func NewTCPFingerListener(
 		shuttingDown:  shuttingDown,
 	}
 
-	listener, err := net.Listen(fl.networkFamily, opts.listen)
+	portSpec, err := deriveListenPort()
+	if err != nil {
+		return nil, err
+	}
+
+	listener, err := net.Listen(fl.networkFamily, portSpec)
 	if err != nil {
 		return nil, err
 	}
@@ -109,6 +114,33 @@ func NewTCPFingerListener(
 		"pid":    os.Getpid(),
 	})
 	return fl, nil
+}
+
+// deriveListenPort encapsulates logic for turning the human's flag-provided
+// listen specs into a string suitable for Go.
+// -listen-env takes precedence over -listen.
+func deriveListenPort() (string, error) {
+	trySpec := [2]string{}
+
+	if opts.listenEnv != "" {
+		val, ok := os.LookupEnv(opts.listenEnv)
+		if !ok {
+			return "", fmt.Errorf("told to use env $%s for port spec but not found in env")
+		}
+		trySpec[0] = val
+		trySpec[1] = ":" + val
+	} else {
+		trySpec[0] = opts.listen
+		trySpec[1] = ":" + opts.listen
+	}
+
+	for _, candidate := range trySpec {
+		if _, _, err := net.SplitHostPort(candidate); err == nil {
+			return candidate, nil
+		}
+	}
+
+	return "", fmt.Errorf("unable to get a listenable spec from %q", trySpec[0])
 }
 
 // GoServeThenClose wraps the start-up of a listener; this handles spawning the
