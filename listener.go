@@ -125,7 +125,7 @@ func deriveListenPort() (string, error) {
 	if opts.listenEnv != "" {
 		val, ok := os.LookupEnv(opts.listenEnv)
 		if !ok {
-			return "", fmt.Errorf("told to use env $%s for port spec but not found in env")
+			return "", fmt.Errorf("told to use env $%s for port spec but not found in env", opts.listenEnv)
 		}
 		trySpec[0] = val
 		trySpec[1] = ":" + val

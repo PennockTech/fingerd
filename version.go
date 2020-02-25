@@ -11,7 +11,7 @@ import (
 
 const fingerProgram = "fingerd"
 
-var fingerVersion = "0.1.5"
+var fingerVersion = "0.1.6"
 
 // Pull the version derivation from whatever variables go into the makeup out
 // into a function so that we can log it at startup.
