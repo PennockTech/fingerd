@@ -1,6 +1,16 @@
 fingerd
 =======
 
+[![Continuous Integration](https://circleci.com/gh/PennockTech/fingerd.svg?style=shield)](https://circleci.com/gh/PennockTech/fingerd/tree/master)
+[![Current Tag](https://img.shields.io/github/tag/PennockTech/fingerd.svg)](https://github.com/PennockTech/fingerd/releases)
+[![Issues](https://img.shields.io/github/issues/PennockTech/fingerd.svg)](https://github.com/PennockTech/fingerd/issues)
+[![Repo Size](https://img.shields.io/github/repo-size/PennockTech/fingerd.svg)](https://github.com/PennockTech/fingerd)
+
+<!--
+Need to fix Documentation and coverage testing before move out of version 0.
+[![Documentation](https://godoc.org/go.pennock.tech/fingerd?status.svg)](https://godoc.org/go.pennock.tech/fingerd)
+-->
+
 `go get go.pennock.tech/fingerd`
 
 This is an implementation of the server-side of the finger protocol, per
@@ -187,10 +197,13 @@ within an OS-less Jail.  An `rc.d` script is included.
 
 ### Docker
 
+Images are automatically built by CI and pushed to Docker Hub as
+`pennocktech/fingerd`.
+
 There is a [Dockerfile](./examples/Dockerfile) which builds a small container
 image.
 
-Build with:
+Build locally with:
 
 ```sh
 docker build -f examples/Dockerfile -t fingerd .
