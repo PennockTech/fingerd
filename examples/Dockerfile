@@ -36,6 +36,7 @@ USER 65534:65534
 ENTRYPOINT ["/bin/fingerd"]
 CMD ["-log.json", "-alias-file=", "--listen-env=PORT"]
 EXPOSE ${PORT}
+VOLUME ["/home"]
 
 ARG BUILDER_IMAGE
 ARG RUNTIME_BASE_IMAGE
@@ -43,3 +44,12 @@ LABEL maintainer="noc+fingerd@pennock-tech.com"
 LABEL tech.pennock.builder.image="${BUILDER_IMAGE}"
 LABEL tech.pennock.baseimage="${RUNTIME_BASE_IMAGE}"
 LABEL tech.pennock.portlist="${PORT}"
+
+# <https://github.com/opencontainers/image-spec/blob/master/annotations.md>
+# nb: we'd need the caller to pass in the version as a build-arg to have
+# it sanely capturable here.
+LABEL org.opencontainers.image.source="https://go.pennock.tech/fingerd/"
+LABEL org.opencontainers.image.vendor="Pennock Tech, LLC"
+LABEL org.opencontainers.image.title="fingerd"
+LABEL org.opencontainers.image.description="Security-focused golang finger daemon"
+LABEL org.opencontainers.image.licenses="MIT"
