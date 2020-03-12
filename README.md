@@ -133,7 +133,7 @@ To build as a static binary for deployment into a lib-less environment:
 ## Either:
 go build -ldflags "-linkmode external -extldflags -static"
 ## Or:
-go build -ldflags -s
+CGO_ENABLED=0 go build -ldflags "-extldflags -static"
 ```
 
 The code uses Go Modules, so you can instead clone the git repo and use
