@@ -21,7 +21,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.13.8
+      - image: circleci/golang:1.14.2
     steps:
       - checkout
       - setup_remote_docker
@@ -48,7 +48,7 @@ jobs:
 
   push_docker_hub:
     docker:
-      - image: circleci/golang:1.13.8
+      - image: circleci/golang:1.14.2
     steps:
       - setup_remote_docker
       - attach_workspace:
