@@ -2,7 +2,8 @@
 # All rights reserved, except as granted under license.
 # Licensed per file LICENSE.txt
 
-ARG BUILDER_IMAGE="golang:1.13.8"
+# Maintainer note: also consider bumping CircleCI image versions
+ARG BUILDER_IMAGE="golang:1.14.2"
 ARG RUNTIME_BASE_IMAGE="scratch"
 ARG PORT=1079
 

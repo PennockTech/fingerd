@@ -21,6 +21,7 @@ version: 2
 jobs:
   build:
     docker:
+      # If changing this ALSO: change once below, and once in the Dockerfile
       - image: circleci/golang:1.14.2
     steps:
       - checkout
@@ -48,6 +49,7 @@ jobs:
 
   push_docker_hub:
     docker:
+      # If changing this ALSO: change once above, and once in the Dockerfile
       - image: circleci/golang:1.14.2
     steps:
       - setup_remote_docker
