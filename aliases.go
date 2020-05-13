@@ -145,8 +145,20 @@ func scheduleAutoMappingDataReload(log logrus.FieldLogger) {
 						l.Info("chmod detected")
 						loadMappingData(log)
 					} else if event.Op&fsnotify.Remove == fsnotify.Remove || event.Op&fsnotify.Rename == fsnotify.Rename {
-						l.Info("gone, removing watch")
-						watcher.Remove(opts.aliasfile)
+						// I have seen this fire when the watched config file
+						// is an entry in a K8S configmap and the entry was
+						// modified, not deleted.
+						_, err := os.Stat(event.Name)
+						if err != nil && os.IsNotExist(err) {
+							l.Info("file gone, confirmed, WATCH GONE")
+						} else {
+							l.Info("file gone, false positive, file still exists, re-watching")
+							// The kernel will have removed the watch and
+							// fsnotify will have removed its copy, to match.
+							// We can't just ignore this, we have to add the
+							// watch back.
+							watcher.Add(opts.aliasfile)
+						}
 						// TODO: should we also remove all aliases?
 						// We currently continue running with the last aliases seen, which lets us
 						// steady-state on the assumption that the file is being replaced.  Perhaps
