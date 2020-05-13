@@ -161,6 +161,7 @@ func main() {
 	masterThreadLogger.WithFields(logrus.Fields{
 		"argv":      os.Args,
 		"version":   currentVersion(),
+		"go":        goVersion(),
 		"listeners": len(haveListeners),
 	}).Info("running")
 

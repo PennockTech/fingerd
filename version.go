@@ -11,7 +11,7 @@ import (
 
 const fingerProgram = "fingerd"
 
-var fingerVersion = "0.1.6"
+var fingerVersion = "0.2.1-dev"
 
 // Pull the version derivation from whatever variables go into the makeup out
 // into a function so that we can log it at startup.
@@ -19,7 +19,11 @@ func currentVersion() string {
 	return fingerVersion
 }
 
+func goVersion() string {
+	return runtime.Version()
+}
+
 func version() {
 	fmt.Printf("%s: Version %s\n", fingerProgram, currentVersion())
-	fmt.Printf("%s: Golang: Runtime: %s\n", fingerProgram, runtime.Version())
+	fmt.Printf("%s: Golang: Runtime: %s\n", fingerProgram, goVersion())
 }
