@@ -1,7 +1,7 @@
 fingerd
 =======
 
-[![Continuous Integration](https://circleci.com/gh/PennockTech/fingerd.svg?style=shield)](https://circleci.com/gh/PennockTech/fingerd/tree/master)
+[![Continuous Integration](https://circleci.com/gh/PennockTech/fingerd.svg?style=shield)](https://circleci.com/gh/PennockTech/fingerd/tree/main)
 [![Current Tag](https://img.shields.io/github/tag/PennockTech/fingerd.svg)](https://github.com/PennockTech/fingerd/releases)
 [![Issues](https://img.shields.io/github/issues/PennockTech/fingerd.svg)](https://github.com/PennockTech/fingerd/issues)
 [![Repo Size](https://img.shields.io/github/repo-size/PennockTech/fingerd.svg)](https://github.com/PennockTech/fingerd)
