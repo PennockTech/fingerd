@@ -82,6 +82,11 @@ func main() {
 		"gid": os.Getgid(),
 		"pid": os.Getpid(),
 	})
+	fullStatusLogger := masterThreadLogger.WithFields(logrus.Fields{
+		"argv":    os.Args,
+		"version": currentVersion(),
+		"go":      goVersion(),
+	})
 
 	haveListeners := make([]*TCPFingerListener, 0, 3)
 
@@ -107,7 +112,7 @@ func main() {
 	if len(haveListeners) == 0 {
 		// avoid chewing CPU in a tight loop if we're being constantly respawned
 		time.Sleep(time.Second)
-		masterThreadLogger.Fatal("no listeners accepted; slept 1s before exiting")
+		fullStatusLogger.Fatal("no listeners accepted; slept 1s before exiting")
 	}
 
 	if os.Getuid() == 0 {
@@ -115,7 +120,7 @@ func main() {
 		dropPrivileges(haveListeners, logger)
 		// only reach here if something has gone wrong; dropPrivileges _should_ re-exec us
 		time.Sleep(time.Second)
-		masterThreadLogger.Fatal("we must drop privileges when running as root")
+		fullStatusLogger.Fatal("we must drop privileges when running as root")
 	}
 
 	// Set up signal handling as soon as we've dropped privs, even though we'll
@@ -158,10 +163,7 @@ func main() {
 		fl.GoServeThenClose()
 	}
 
-	masterThreadLogger.WithFields(logrus.Fields{
-		"argv":      os.Args,
-		"version":   currentVersion(),
-		"go":        goVersion(),
+	fullStatusLogger.WithFields(logrus.Fields{
 		"listeners": len(haveListeners),
 	}).Info("running")
 
