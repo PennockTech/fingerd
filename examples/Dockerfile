@@ -3,7 +3,7 @@
 # Licensed per file LICENSE.txt
 
 # Maintainer note: also consider bumping CircleCI image versions
-ARG BUILDER_IMAGE="golang:1.14.5"
+ARG BUILDER_IMAGE="golang:1.14.6"
 ARG RUNTIME_BASE_IMAGE="scratch"
 ARG PORT=1079
 
