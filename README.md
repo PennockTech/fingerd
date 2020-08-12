@@ -13,6 +13,14 @@ Need to fix Documentation and coverage testing before move out of version 0.
 
 `go get go.pennock.tech/fingerd`
 
+A finger protocol server, written in a safe programming language, with
+security designed in from the beginning and guidance on sandboxing.
+
+No operating-system information is revealed, only information explicitly
+chosen for disclosure, such as cryptographic public keys of users.
+
+---
+
 This is an implementation of the server-side of the finger protocol, per
 [RFC742][].  This is written in Golang and is designed to be able to expect no
 operating system services except the home directories of the users.
@@ -112,20 +120,19 @@ external packet redirection or use `CAP_NET_BIND_SERVICE`:
 $ sudo setcap cap_net_bind_service=+ep fingerd
 ```
 
+
 ## Installation
 
-The first two steps are implicit in moderately recent versions of Go but are
-listed for completeness:
+The Go toolchain needs to be at least version 1.13; as of 2020-08-11, with the
+release of Go 1.15, Go 1.14 is the minimum supported upstream.
 
 ```console
-$ mkdir ~/go
-$ export GOPATH="$HOME/go"
 $ go get go.pennock.tech/fingerd
 ```
 
-With those install steps, the binary can be found in `~/go/bin/fingerd`.
+With that command, the binary can be found in `~/go/bin/fingerd`.
 The `go get` command will fetch this repo, any dependent repos and perform the
-build.
+build.  (Some environment variables specific to Go can change this.)
 
 To build as a static binary for deployment into a lib-less environment:
 
@@ -139,6 +146,10 @@ CGO_ENABLED=0 go build -ldflags "-extldflags -static"
 The code uses Go Modules, so you can instead clone the git repo and use
 `go build` inside it, without needing to worry about a `$GOPATH`; this
 requires Go 1.12 or newer (or Go 1.11 with some env-var enabling).
+Since we're now using stdlib functionality introduced with Go 1.13,
+to be more resilient to certain classes of future stdlib functionality changes,
+this should be a non-issue.
+
 
 ## Invoking
 

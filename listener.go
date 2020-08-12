@@ -6,6 +6,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -188,7 +189,8 @@ LOOP:
 		acceptedAt := time.Now()
 
 		if err != nil {
-			if opErr, ok := err.(*net.OpError); ok && opErr.Timeout() {
+			var opErr *net.OpError
+			if errors.As(err, &opErr) && opErr.Timeout() {
 				fl.Debug("timeout accepting connection, should mean that we're shutting down")
 				continue
 			}
