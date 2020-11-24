@@ -22,64 +22,65 @@ jobs:
   build:
     docker:
       # If changing this ALSO: change once below, and once in the Dockerfile
-      - image: circleci/golang:1.14.6
+      - image: circleci/golang:1.15
     steps:
       - checkout
-      - setup_remote_docker
+#      - setup_remote_docker
       - run:
           name: Report and Test
           command: |
             go version
             go test -v ./...
             go list -m all
-      - run:
-          name: Build Docker Image
-          command: |
-            mkdir -pv /tmp/persist
-            : "${IMAGE_NAME:=pennocktech/fingerd}"
-            TAG="$(git describe --tags --always --dirty)"
-            if [ "$(git describe --abbrev=0)" = "$TAG" ]; then RELEASE=true; else RELEASE=false; fi
-            TAG="${TAG#v}"
-            typeset -p IMAGE_NAME TAG RELEASE > /tmp/persist/docker-env.sh
-            docker build -f examples/Dockerfile -t "$IMAGE_NAME:$TAG" .
-            docker save -o /tmp/persist/docker-layers.tar "$IMAGE_NAME:$TAG"
-      - persist_to_workspace:
-          root: /tmp/persist
-          paths: .
+#      - run:
+#          name: Build Docker Image
+#          command: |
+#            mkdir -pv /tmp/persist
+#            : "${IMAGE_NAME:=pennocktech/fingerd}"
+#            TAG="$(git describe --tags --always --dirty)"
+#            if [ "$(git describe --abbrev=0)" = "$TAG" ]; then RELEASE=true; else RELEASE=false; fi
+#            TAG="${TAG#v}"
+#            typeset -p IMAGE_NAME TAG RELEASE > /tmp/persist/docker-env.sh
+#            docker build -f examples/Dockerfile -t "$IMAGE_NAME:$TAG" .
+#            docker save -o /tmp/persist/docker-layers.tar "$IMAGE_NAME:$TAG"
+#      - persist_to_workspace:
+#          root: /tmp/persist
+#          paths: .
 
-  push_docker_hub:
-    docker:
-      # If changing this ALSO: change once above, and once in the Dockerfile
-      - image: circleci/golang:1.14.6
-    steps:
-      - setup_remote_docker
-      - attach_workspace:
-          at: /tmp/persist
-      - run:
-          name: Load Docker image from persisted workspace
-          command: docker load -i /tmp/persist/docker-layers.tar
-      - run:
-          name: Docker Login to Docker Hub
-          command: |
-            emit_env_var() { bash -c 'for x; do typeset -p $x | sed -Ee "s,^[^\"]+\"(.+)\"$,\1,"; done' dummy "$@"; }
-            source /tmp/persist/docker-env.sh
-            emit_env_var DOCKERHUB_PASS | docker login -u "$DOCKERHUB_USER" --password-stdin
-            docker push "$IMAGE_NAME:$TAG"
-            if $RELEASE; then docker tag "$IMAGE_NAME:$TAG" "$IMAGE_NAME:latest"; docker push "$IMAGE_NAME:latest"; fi
+#  push_docker_hub:
+#    docker:
+#      # If changing this ALSO: change once above, and once in the Dockerfile
+#      - image: circleci/golang:1.15
+#    steps:
+#      - setup_remote_docker
+#      - attach_workspace:
+#          at: /tmp/persist
+#      - run:
+#          name: Load Docker image from persisted workspace
+#          command: docker load -i /tmp/persist/docker-layers.tar
+#      - run:
+#          name: Docker Login to Docker Hub
+#          command: |
+#            emit_env_var() { bash -c 'for x; do typeset -p $x | sed -Ee "s,^[^\"]+\"(.+)\"$,\1,"; done' dummy "$@"; }
+#            source /tmp/persist/docker-env.sh
+#            emit_env_var DOCKERHUB_PASS | docker login -u "$DOCKERHUB_USER" --password-stdin
+#            docker push "$IMAGE_NAME:$TAG"
+#            if $RELEASE; then docker tag "$IMAGE_NAME:$TAG" "$IMAGE_NAME:latest"; docker push "$IMAGE_NAME:latest"; fi
 
 workflows:
   version: 2
-  build_and_push:
+  #build_and_push:
+  build_only:
     jobs:
       - build
-      - push_docker_hub:
-          context: heroku-and-dockerhub
-          requires:
-            - build
-          filters:
-            branches:
-              only:
-                - master
-                - release
-                - /.+-hub/
+#      - push_docker_hub:
+#          context: heroku-and-dockerhub
+#          requires:
+#            - build
+#          filters:
+#            branches:
+#              only:
+#                - master
+#                - release
+#                - /.+-hub/
 

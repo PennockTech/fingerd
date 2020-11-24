@@ -208,8 +208,8 @@ within an OS-less Jail.  An `rc.d` script is included.
 
 ### Docker
 
-Images are automatically built by CI and pushed to Docker Hub as
-`pennocktech/fingerd`.
+Images are **currently not** automatically built by CI and pushed anywhere.
+(Old image repository hosting disabled, have not yet set up a new one.)
 
 There is a [Dockerfile](./examples/Dockerfile) which builds a small container
 image.
