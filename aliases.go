@@ -100,7 +100,6 @@ func loadMappingData(log logrus.FieldLogger) {
 	aliases.to = concrete
 	aliases.Unlock()
 	log.WithField("alias-count", len(concrete)).Info("parsed aliases")
-	return
 }
 
 // as long as the _directory_ exists, we'll detect a late file creation and handle it fine.
@@ -201,6 +200,4 @@ func scheduleAutoMappingDataReload(log logrus.FieldLogger) {
 		log.Warn("unable to set up any watches, terminating FS watcher, auto-reloading gone")
 		_ = watcher.Close()
 	}
-
-	return
 }

@@ -124,8 +124,9 @@ func main() {
 	}
 
 	// Set up signal handling as soon as we've dropped privs, even though we'll
-	// not act on it until late.
-	signalShutdownCh := make(chan os.Signal)
+	// not act on it until late.  NB: package Signal DOES NOT BLOCK writing
+	// to the channel, so it MUST be buffered.  [caught by staticcheck]
+	signalShutdownCh := make(chan os.Signal, 1)
 	signal.Notify(signalShutdownCh, syscall.SIGTERM, syscall.SIGINT)
 
 	// We parse these _after_ dropping privileges, so the listening socket is open, but

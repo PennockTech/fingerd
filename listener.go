@@ -216,8 +216,6 @@ LOOP:
 		fl.active.Add(1)
 		go c.handleOneConnection()
 	}
-
-	return
 }
 
 func (c *TCPFingerConnection) handleOneConnection() {
@@ -320,6 +318,4 @@ func (c *TCPFingerConnection) handleOneConnection() {
 		// still not rewarding hinkiness with attempts to write a response
 		return
 	}
-
-	return
 }
