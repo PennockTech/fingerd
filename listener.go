@@ -22,6 +22,9 @@ var (
 	aLongTimeAgo = time.Unix(1, 0)
 )
 
+// A DeadlineableTCPListener is a TCP listener which can be set to abort any extand listen(2) calls.
+// A *net.TCPListener should satisfy this interface.
+//
 // Golang does after all have a way to abort a current listen(2) call for a new
 // connection; you can change the read timeout on the socket and existing
 // listen(2) calls will return if need be.  So we don't need to periodically
