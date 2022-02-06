@@ -1,0 +1,86 @@
+70
+
+## Human names
+Pennock
+pennock
+
+## Package-specific conceptual terms used in documentation, hypotheticals etc
+passwdHomedirOrBust
+caption_length
+
+## Tech abuse of English
+auth/S
+conf
+config/S
+dir/S
+lookups
+num/S
+priv/S
+respawn/DGS
+signalled
+
+## Common terms in (Go) development
+automount/S
+configmap/S
+env/S
+fd_unix
+filesystem/S
+golint
+homedir/S
+middleware/S
+namespace/S
+netFD
+pidfile/S
+privkey/S
+pubkey/S
+slowloris
+stdlib
+syscall/S
+userid/S
+waitgroup/S
+webserver/S
+ztypes_
+
+## Unix commands and terms
+chmod
+dup
+fgrep
+passwd
+proc
+setuid
+sysctl
+
+## OSes, Filetypes, etc
+FreeBSD
+IPv4
+IPv6
+v0
+v1
+v2
+v3
+v4
+v5
+v6
+html
+md
+txt
+
+## Other tools and packages
+### dep
+logstash
+sirupsen
+staticcheck
+### zerolog
+
+## Other English dialects
+colour
+hinky/P
+humour
+
+## Units and abuse of numbers
+
+## Style guide of "e.g." is too ancient, etc.
+eg
+nb
+pre
+rfcFOO
