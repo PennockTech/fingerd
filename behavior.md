@@ -18,7 +18,7 @@ FreeBSD fingerd supports but we reject:
   where logged in, which is a lot of system-specific non-portable binary
   parsing, so we decline).
 * Forwarding connections to other hosts
-  + Comes because by default it just invokes the local finger daemon
+  + Comes because by default it just invokes the local _finger(1)_ client
 * Showing where email is forwarded to if `~/.forward` is present
 * Dropping a leading `*` from the GECOS field (but the source asks "why?")
 * Showing various extra pieces of information from GECOS assigning meanings to

@@ -284,8 +284,8 @@ they could only see that information about "some user" was requested and the
 size of the data.  If the list of users is known and static, then the size of
 the data returned would likely reveal which user was fingered via a reverse
 lookup table of size -> username.  So in the presence of a known list of
-users, TLS would buy nothing.  What TLS would offer is for the existence of
-users to be revealed to eavesdroppers.
+users, TLS would buy nothing.  What TLS would offer is protection against
+disclosing names of users to eavesdroppers.
 
 If this is a concern, [RFC742][] service should not be used or such users
 should not expose data for use via [RFC742][]; we support the `.nofinger` file
