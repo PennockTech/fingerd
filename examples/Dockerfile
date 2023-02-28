@@ -4,7 +4,7 @@
 
 # Maintainer note: also consider bumping CircleCI image versions
 # Do not use -alpine, we need the git command
-ARG BUILDER_IMAGE="golang:1.15.5"
+ARG BUILDER_IMAGE="golang:1.20.1"
 ARG RUNTIME_BASE_IMAGE="scratch"
 ARG PORT=1079
 

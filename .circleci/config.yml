@@ -22,7 +22,7 @@ jobs:
   build:
     docker:
       # If changing this ALSO: change once below, and once in the Dockerfile
-      - image: circleci/golang:1.15
+      - image: circleci/golang:1.20
     steps:
       - checkout
 #      - setup_remote_docker
