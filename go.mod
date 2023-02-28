@@ -1,5 +1,6 @@
 module go.pennock.tech/fingerd
 
+// If bumping this, be sure to check CI workflows too
 go 1.19
 
 require (
