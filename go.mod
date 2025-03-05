@@ -1,7 +1,9 @@
 module go.pennock.tech/fingerd
 
 // If bumping this, be sure to check CI workflows too
-go 1.19
+go 1.23.0
+
+toolchain go1.24.1
 
 require (
 	github.com/sirupsen/logrus v1.9.3
@@ -10,5 +12,5 @@ require (
 
 require (
 	github.com/fsnotify/fsnotify v1.4.7 // indirect
-	golang.org/x/sys v0.16.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
 )
