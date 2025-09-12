@@ -159,7 +159,7 @@ func inheritedListeners(
 	tfls := make([]*TCPFingerListener, 0, 3)
 
 	i := 0
-	for _, line := range strings.Split(details, "\n") {
+	for line := range strings.SplitSeq(details, "\n") {
 		if len(line) == 0 {
 			continue
 		}
