@@ -9,5 +9,5 @@ require (
 
 require (
 	github.com/fsnotify/fsnotify v1.4.7 // indirect
-	golang.org/x/sys v0.36.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 )
